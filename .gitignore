@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Base de datos local (puede contener logs reales)
+data/*.db
+data/*.sqlite3
+
+# Secretos y configuración local
+.env
+*.pem
+*.key
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
