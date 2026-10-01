@@ -28,10 +28,20 @@ def db_session():
         conn.close()
 
 
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Migración ligera: agrega columnas nuevas a bases creadas en fases anteriores."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(syslog_events)").fetchall()}
+    if "repeat_count" not in cols:
+        conn.execute("ALTER TABLE syslog_events ADD COLUMN repeat_count INTEGER NOT NULL DEFAULT 1")
+    if "last_seen" not in cols:
+        conn.execute("ALTER TABLE syslog_events ADD COLUMN last_seen TEXT")
+
+
 def init_db() -> None:
-    """Crea las tablas si no existen (idempotente)."""
+    """Crea las tablas si no existen y aplica migraciones (idempotente)."""
     with db_session() as conn:
         conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+        _migrate(conn)
 
 
 def list_tables() -> list[str]:

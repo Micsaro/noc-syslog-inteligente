@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS syslog_events (
     raw_message  TEXT,                -- original sin modificar (evidencia)
     dedup_hash   TEXT,                -- para deduplicaci�n / control de tormentas
     tags         TEXT DEFAULT '',     -- etiquetas separadas por coma
+    repeat_count INTEGER NOT NULL DEFAULT 1,   -- repeticiones (deduplicación)
+    last_seen    TEXT,                         -- última repetición vista
     is_simulated INTEGER NOT NULL DEFAULT 1
 );
 CREATE INDEX IF NOT EXISTS idx_events_received ON syslog_events(received_at);
