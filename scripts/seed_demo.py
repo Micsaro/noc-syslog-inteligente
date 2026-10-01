@@ -10,13 +10,16 @@ DEMO_DEVICES = [
 
 if __name__ == "__main__":
     init_db()
-    with get_connection() as conn:
+        with get_connection() as conn:
+        inserted = 0
         for d in DEMO_DEVICES:
-            conn.execute(
+            cur = conn.execute(
                 "INSERT OR IGNORE INTO devices "
                 "(name, ip_address, vendor, model, os_version, location, is_simulated) "
                 "VALUES (?,?,?,?,?,?,1)", d)
-        conn.execute(
-            "INSERT INTO audit_log (actor, action, details) VALUES (?,?,?)",
-            ("system", "seed.demo", "Carga de datos simulados"))
-    print("Datos simulados cargados.")
+            inserted += cur.rowcount
+        if inserted:
+            conn.execute(
+                "INSERT INTO audit_log (actor, action, details) VALUES (?,?,?)",
+                ("system", "seed.demo", f"Carga de datos simulados ({inserted} equipos)"))
+    print(f"Equipos simulados insertados: {inserted}")
