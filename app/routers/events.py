@@ -107,7 +107,13 @@ def stats():
         "by_vendor": [dict(r) for r in by_vendor],
     }
 
-
+@router.get("/tags")
+def list_tags():
+    """Etiquetas existentes (para el autocompletado del dashboard)."""
+    with db_session() as conn:
+        rows = conn.execute("SELECT DISTINCT tags FROM syslog_events WHERE tags != ''").fetchall()
+    return sorted({t for r in rows for t in r["tags"].split(",") if t})
+    
 @router.get("/{event_id}")
 def get_event(event_id: int):
     """Detalle de un evento, incluida la evidencia original (raw_message)."""

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NOC Syslog Inteligente</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <h1>NOC Syslog Inteligente <span class="badge">v0.2.0 · datos simulados</span></h1>
+  <div class="controls">
+    <label>Ventana
+      <select id="win">
+        <option value="6">6 h</option><option value="24" selected>24 h</option>
+        <option value="48">48 h</option><option value="72">72 h</option>
+      </select>
+    </label>
+    <label>Operador <input id="actor" maxlength="64" placeholder="tu nombre" autocomplete="off"></label>
+    <label>Notificar sev ≤
+      <select id="notify">
+        <option value="">Desactivado</option><option value="2">2 (críticos)</option>
+        <option value="3">3 (errores)</option><option value="4">4 (advertencias)</option>
+      </select>
+    </label>
+    <label class="inline"><input type="checkbox" id="auto" checked> Auto 15 s</label>
+    <button id="theme" type="button">Claro / Oscuro</button>
+    <small id="updated" class="muted"></small>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button type="button" data-tab="resumen" class="active">Resumen</button>
+  <button type="button" data-tab="eventos">Eventos</button>
+  <button type="button" data-tab="incidentes">Incidentes</button>
+</nav>
+
+<main>
+  <section id="tab-resumen" class="tab">
+    <div id="kpis" class="kpis"></div>
+    <div class="grid2">
+      <article class="card">
+        <h2>Estado de dispositivos</h2>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>Equipo</th><th>Marca</th><th>IP</th><th>Inventario</th><th>Salud</th><th>Mensajes</th><th>Último evento</th></tr></thead>
+            <tbody id="dev-body"></tbody>
+          </table>
+        </div>
+      </article>
+      <article class="card"><h2>Mensajes por severidad</h2><div id="chart-sev"></div></article>
+      <article class="card">
+        <h2>Tendencia por hora</h2>
+        <div class="legend"><span class="sw sw-total"></span> Total <span class="sw sw-err"></span> Errores (sev 0-3)</div>
+        <div id="chart-trend"></div>
+      </article>
+      <article class="card"><h2>Últimos eventos graves (sev ≤ 3)</h2><ul id="recent" class="plain"></ul></article>
+    </div>
+    <article class="card">
+      <h2>Mapa de calor: volumen de mensajes por equipo y hora</h2>
+      <div id="heat" class="scroll"></div>
+    </article>
+  </section>
+
+  <section id="tab-eventos" class="tab" hidden>
+    <form id="filters" class="card filters" autocomplete="off">
+      <label>Desde <input type="date" id="f-from"></label>
+      <label>Hasta <input type="date" id="f-to"></label>
+      <label>Marca
+        <select id="f-vendor"><option value="">Todas</option><option>cisco</option><option>fortinet</option><option>huawei</option><option>other</option></select>
+      </label>
+      <label>Equipo <input id="f-device" list="dl-devices" placeholder="nombre del equipo"></label>
+      <label>Severidad
+        <select id="f-sev">
+          <option value="">Todas</option>
+          <option value="max:2">Críticos o peores (0-2)</option>
+          <option value="max:3">Errores o peores (0-3)</option>
+          <option value="max:4">Advertencias o peores (0-4)</option>
+          <option value="eq:0">0 Emergency</option><option value="eq:1">1 Alert</option><option value="eq:2">2 Critical</option>
+          <option value="eq:3">3 Error</option><option value="eq:4">4 Warning</option><option value="eq:5">5 Notice</option>
+          <option value="eq:6">6 Informational</option><option value="eq:7">7 Debug</option>
+        </select>
+      </label>
+      <label>Etiqueta <input id="f-tag" list="dl-tags" placeholder="ej. sospechoso"></label>
+      <label>Origen
+        <select id="f-sim"><option value="">Todos</option><option value="true">Simulados</option><option value="false">Reales</option></select>
+      </label>
+      <label>Texto <input id="f-q" maxlength="64" placeholder="buscar en el mensaje"></label>
+      <div class="filter-actions">
+        <button type="submit">Aplicar</button>
+        <button type="button" id="f-reset">Limpiar</button>
+      </div>
+    </form>
+    <article class="card">
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Recibido</th><th>Severidad</th><th>Equipo</th><th>Marca</th><th>Facility</th><th>Mensaje</th><th>Etiquetas</th><th>Rep.</th><th></th></tr></thead>
+          <tbody id="ev-body"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <button type="button" id="ev-prev">« Anterior</button>
+        <span id="ev-page" class="muted"></span>
+        <button type="button" id="ev-next">Siguiente »</button>
+      </div>
+    </article>
+  </section>
+
+  <section id="tab-incidentes" class="tab" hidden>
+    <div class="card toolbar">
+      <label>Estado
+        <select id="i-status">
+          <option value="active">Activos</option><option value="">Todos</option>
+          <option value="open">Abierto</option><option value="assigned">Asignado</option>
+          <option value="in_progress">En curso</option><option value="resolved">Resuelto</option>
+          <option value="closed">Cerrado</option>
+        </select>
+      </label>
+      <button type="button" id="i-new">+ Nuevo incidente</button>
+    </div>
+    <article class="card">
+      <div class="scroll">
+        <table>
+          <thead><tr><th>#</th><th>Título</th><th>Severidad</th><th>Estado</th><th>Equipo</th><th>Asignado a</th><th>Eventos</th><th>Actualizado</th></tr></thead>
+          <tbody id="inc-body"></tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+</main>
+
+<dialog id="dlg-event"></dialog>
+<dialog id="dlg-inc-new"></dialog>
+<dialog id="dlg-inc"></dialog>
+<div id="toast" class="toast" popover="manual" aria-live="polite"></div>
+<datalist id="dl-devices"></datalist>
+<datalist id="dl-tags"></datalist>
+</body>
+</html>
