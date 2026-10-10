@@ -78,7 +78,24 @@ dl.kv dt{color:var(--muted)}dl.kv dd{margin:0}
 .dlg-actions,.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.5rem}
 .row input{flex:1;min-width:140px;width:auto}
 ol.hist{margin:.3rem 0;padding-left:1.1rem}ol.hist li{margin-bottom:.35rem}
-.toast{position:fixed;inset:auto 1rem 1rem auto;margin:0;padding:0;border:0;background:transparent;overflow:visible;gap:.4rem;max-width:min(420px,90vw);width:max-content}
-.toast:popover-open{display:grid}
+.toast{position:fixed;right:1rem;bottom:1rem;display:grid;gap:.4rem;z-index:99;max-width:min(420px,90vw)}
 .toast-item{background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:6px;padding:.5rem .7rem;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .toast-item.err{border-left-color:var(--bad)}.toast-item.ok{border-left-color:var(--ok)}.toast-item.alert{border-left-color:var(--warn)}
+.console-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:.8rem}
+@media (max-width:900px){.console-grid{grid-template-columns:1fr}}
+.side{display:grid;gap:.8rem;align-content:start}
+.term-card{display:grid;gap:.5rem;align-content:start}
+.term-head{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.term{background:#0b0f14;color:#d6e2f0;border:1px solid var(--border);border-radius:8px;padding:.6rem;height:460px;overflow:auto;font:13px/1.35 Consolas,"Courier New",monospace;cursor:text}
+.term pre{margin:0;background:transparent;border:none;padding:0;white-space:pre-wrap;word-break:break-word;color:inherit;font:inherit}
+.term .cmd{color:#8ab4ff}.term .bad{color:#ff6b6b}.term .sim{color:#7d8da1}
+.term-line{display:flex;gap:.4rem;align-items:center}
+.term-line input{flex:1;background:transparent;border:none;color:#fff;font:inherit;outline:none;padding:0}
+.btns{display:flex;flex-wrap:wrap;gap:.35rem}
+.btns button{font-size:.78rem;padding:.2rem .5rem}
+#c-macro-form{display:grid;gap:.4rem;margin-top:.6rem}
+#c-macro-form input,#c-macro-form textarea{width:100%}
+#c-macros li button{padding:.1rem .45rem;font-size:.78rem}
+pre.config{max-height:520px;overflow:auto;font:13px/1.4 Consolas,"Courier New",monospace}
+details{margin:.3rem 0}details summary{cursor:pointer;font-weight:600}
+code{font-family:Consolas,"Courier New",monospace;font-size:.85em}

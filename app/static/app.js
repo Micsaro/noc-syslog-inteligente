@@ -63,14 +63,8 @@ function revealRaw(text) {
 
 function toast(msg, kind = "info") {
   const t = el("div", { class: `toast-item ${kind}` }, msg);
-  const box = $("#toast");
-  box.append(t);
-  // Popover: se dibuja por encima de los diálogos modales.
-  if (box.showPopover && !box.matches(":popover-open")) box.showPopover();
-  setTimeout(() => {
-    t.remove();
-    if (!box.children.length && box.matches(":popover-open")) box.hidePopover();
-  }, 5000);
+  $("#toast").append(t);
+  setTimeout(() => t.remove(), 5000);
 }
 
 const actor = () => (store.get("noc.actor") || "").replace(/[^\w .@-]/g, "").trim().slice(0, 64) || "anonymous";
@@ -328,11 +322,8 @@ function describe(h) {
   const d = h.details || {};
   if (h.action === "incident.note") return `Nota: ${d.text}`;
   if (h.action === "incident.create") return `Creado: ${d.title} (sev ${d.severity})`;
-   if (h.action === "incident.update") {
-    const FIELD = { status: "estado", assigned_to: "asignado a", severity: "severidad", title: "título", description: "descripción" };
-    const tr = (k, v) => (k === "status" && STATUS_ES[v]) ? STATUS_ES[v] : (v ?? "—");
-    const ch = Object.keys(d.despues || {})
-      .map((k) => `${FIELD[k] || k}: ${tr(k, d.antes?.[k])} → ${tr(k, d.despues[k])}`).join("; ");
+  if (h.action === "incident.update") {
+    const ch = Object.keys(d.despues || {}).map((k) => `${k}: ${d.antes?.[k] ?? "—"} → ${d.despues[k] ?? "—"}`).join("; ");
     return `Cambios: ${ch}` + (d.nota ? ` · Nota: ${d.nota}` : "");
   }
   return h.action;
@@ -409,7 +400,8 @@ async function refresh() {
   try {
     if (state.tab === "resumen") await loadSummary();
     else if (state.tab === "eventos") await loadEvents();
-    else await loadIncidents();
+        else if (state.tab === "incidentes") await loadIncidents();
+    else await loadConsolePanel();   // pestañas Consola y Plantillas
     await checkNotifications();
     $("#updated").textContent = "Actualizado " + new Date().toLocaleTimeString("es-CO");
   } catch (err) { toast(err.message, "err"); }

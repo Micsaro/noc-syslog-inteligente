@@ -73,3 +73,14 @@ CREATE TABLE IF NOT EXISTS audit_log (
     entity_id   INTEGER,
     details     TEXT
 );
+
+-- 6. Macros de la consola simulada (se validan contra la política al crear y al ejecutar)
+CREATE TABLE IF NOT EXISTS console_macros (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL,
+    vendor     TEXT NOT NULL CHECK (vendor IN ('cisco','fortinet','huawei','other')),
+    commands   TEXT NOT NULL,           -- lista JSON de comandos ya normalizados
+    created_by TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (name, vendor)
+);

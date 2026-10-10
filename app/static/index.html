@@ -6,6 +6,7 @@
   <title>NOC Syslog Inteligente</title>
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/app.js" defer></script>
+  <script src="/static/console.js" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -34,6 +35,8 @@
   <button type="button" data-tab="resumen" class="active">Resumen</button>
   <button type="button" data-tab="eventos">Eventos</button>
   <button type="button" data-tab="incidentes">Incidentes</button>
+  <button type="button" data-tab="consola">Consola</button>
+  <button type="button" data-tab="plantillas">Plantillas</button>
 </nav>
 
 <main>
@@ -128,12 +131,73 @@
       </div>
     </article>
   </section>
+    <section id="tab-consola" class="tab" hidden>
+    <div class="card toolbar">
+      <label>Equipo <select id="c-device"></select></label>
+      <label>Puerto serie <select id="c-port"><option value="">(se detecta al conectar)</option></select></label>
+      <div class="row">
+        <button type="button" id="c-detect" class="primary">Detectar puerto y conectar</button>
+        <button type="button" id="c-disconnect" disabled>Desconectar</button>
+      </div>
+      <small id="c-status" class="muted">Sin conexión</small>
+    </div>
+    <div class="console-grid">
+      <article class="card term-card">
+        <div class="term-head">
+          <span class="pill st-in_progress">SESIÓN SIMULADA · SOLO LECTURA</span>
+          <small class="muted">Flechas ↑↓ para el historial · help · clear</small>
+        </div>
+        <div id="term" class="term">
+          <pre id="term-out"></pre>
+          <div class="term-line"><span id="term-prompt">—</span><input id="term-in" autocomplete="off" spellcheck="false" maxlength="160" disabled></div>
+        </div>
+      </article>
+      <aside class="side">
+        <article class="card"><h2>Verificación rápida</h2><div id="c-presets" class="btns"><span class="muted">Conéctate a un equipo.</span></div></article>
+        <article class="card">
+          <h2>Macros</h2>
+          <ul id="c-macros" class="plain"></ul>
+          <form id="c-macro-form">
+            <label>Nombre <input id="c-macro-name" maxlength="40" placeholder="Revisión rápida" required></label>
+            <label>Comandos (uno por línea, máx. 10)<textarea id="c-macro-cmds" rows="4" placeholder="show version&#10;show ip interface brief"></textarea></label>
+            <button type="submit">Guardar macro</button>
+          </form>
+        </article>
+        <article class="card"><h2>Política de comandos</h2><div id="c-policy"><span class="muted">Conéctate a un equipo.</span></div></article>
+      </aside>
+    </div>
+  </section>
+
+  <section id="tab-plantillas" class="tab" hidden>
+    <form id="g-form" class="card filters" autocomplete="off">
+      <label>Equipo (opcional) <select id="g-device"></select></label>
+      <label>Fabricante
+        <select id="g-vendor">
+          <option value="cisco">Cisco IOS / IOS XE</option><option value="fortinet">Fortinet FortiOS</option><option value="huawei">Huawei VRP</option>
+        </select>
+      </label>
+      <label>Plantilla
+        <select id="g-template">
+          <option value="syslog">Envío de Syslog al NOC</option><option value="hardening">Endurecimiento base</option>
+        </select>
+      </label>
+      <label>Servidor Syslog <input id="g-host" value="192.0.2.50" maxlength="45"></label>
+      <label>Puerto <input id="g-port" type="number" min="1" max="65535" value="514"></label>
+      <label>Severidad máxima <select id="g-sev"></select></label>
+      <label>Servidor NTP <input id="g-ntp" value="192.0.2.123" maxlength="45"></label>
+      <div class="filter-actions">
+        <button type="submit" class="primary">Generar</button>
+        <button type="button" id="g-copy">Copiar</button>
+      </div>
+    </form>
+    <article class="card"><pre id="g-out" class="config">Genera una plantilla para verla aquí.</pre></article>
+  </section>
 </main>
 
 <dialog id="dlg-event"></dialog>
 <dialog id="dlg-inc-new"></dialog>
 <dialog id="dlg-inc"></dialog>
-<div id="toast" class="toast" popover="manual" aria-live="polite"></div>
+<div id="toast" class="toast" aria-live="polite"></div>
 <datalist id="dl-devices"></datalist>
 <datalist id="dl-tags"></datalist>
 </body>

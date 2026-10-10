@@ -15,6 +15,8 @@ from app.routers.events import router as events_router
 from app.routers.incidents import router as incidents_router
 from app.routers.syslog import router as syslog_router
 from app.udp_receiver import start_udp_listener
+from app.routers.config import router as config_router
+from app.routers.console import router as console_router
 
 logging.basicConfig(level=logging.INFO)
 
@@ -60,6 +62,8 @@ app.include_router(events_router)
 app.include_router(incidents_router)
 app.include_router(dashboard_router)
 app.include_router(audit_router)
+app.include_router(console_router)
+app.include_router(config_router)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
