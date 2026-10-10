@@ -109,4 +109,4 @@ docs/           política de defensa ante IA y diseño de la conexión SSH real
 ```
 
 ## Licencia y autoría
-Proyecto académico. Autor: `<tu nombre>` · Docente: Ing. John Harold Pérez Calderón.
+Proyecto académico. Autor: `Michael Sarmiento` · Docente: Ing. John Harold Pérez Calderón.
