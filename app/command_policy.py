@@ -134,7 +134,7 @@ def evaluate(vendor: str, raw: str) -> Decision:
             return Decision(True, cmd, "permitido", desc, canon=canon,
                             arg=m.group(1) if m.groups() else None, flt=flt)
 
-        return _deny(cmd, "no-listado",
+    return _deny(cmd, "no-listado",
                  "No está en la lista de permitidos de este fabricante (se deniega por defecto). "
                  "Escribe 'help' para ver los comandos válidos; no se aceptan abreviaturas.")
 

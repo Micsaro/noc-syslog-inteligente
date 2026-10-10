@@ -54,7 +54,7 @@ def _detect_ports() -> dict:
         pass
     ports.append({"device": "SIM1", "description": "Puerto simulado (sin hardware)",
                   "usb": False, "simulated": True})
-        real = [p for p in ports if not p["simulated"]]
+    real = [p for p in ports if not p["simulated"]]
     usb = [p for p in real if p["usb"]]
     useful = [p for p in real if "bluetooth" not in p["description"].lower()]
     fallback = [p for p in ports if p["simulated"]]

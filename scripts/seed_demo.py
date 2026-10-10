@@ -1,6 +1,6 @@
-"""Carga datos SIMULADOS de demostracion. No usar IPs reales de produccion.
-Las IPs usan rangos reservados para documentacion (RFC 5737)."""
-from app.database import init_db, get_connection
+"""Carga datos SIMULADOS de demostración. No usar IPs reales de producción.
+Las IPs usan rangos reservados para documentación (RFC 5737)."""
+from app.database import db_session, init_db
 
 DEMO_DEVICES = [
     ("SIM-CISCO-SW01",  "192.0.2.10",   "cisco",    "Catalyst 9300", "IOS XE 17.9", "Sala TIC - Rack A (SIMULADO)"),
@@ -10,7 +10,7 @@ DEMO_DEVICES = [
 
 if __name__ == "__main__":
     init_db()
-        with get_connection() as conn:
+    with db_session() as conn:
         inserted = 0
         for d in DEMO_DEVICES:
             cur = conn.execute(
