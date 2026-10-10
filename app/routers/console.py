@@ -54,9 +54,12 @@ def _detect_ports() -> dict:
         pass
     ports.append({"device": "SIM1", "description": "Puerto simulado (sin hardware)",
                   "usb": False, "simulated": True})
-    real = [p for p in ports if not p["simulated"]]
+        real = [p for p in ports if not p["simulated"]]
     usb = [p for p in real if p["usb"]]
-    return {"ports": ports, "recommended": (usb or real or ports)[0]["device"], "pyserial": has_lib}
+    useful = [p for p in real if "bluetooth" not in p["description"].lower()]
+    fallback = [p for p in ports if p["simulated"]]
+    return {"ports": ports, "recommended": (usb or useful or fallback)[0]["device"],
+            "pyserial": has_lib}
 
 
 def _device(conn: sqlite3.Connection, device_id: int) -> sqlite3.Row:
