@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Bitácora">
+  <rect x="3" y="3" width="42" height="42" rx="3" fill="#eef2ee" stroke="#12202b" stroke-width="2"/>
+  <path d="M3 15h42M3 27h42M3 39h42M15 3v42M27 3v42M39 3v42" stroke="#c3d1c9" stroke-width="1"/>
+  <path d="M7 27h8l4-12 6 22 5-15h10" fill="none" stroke="#12202b" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="41" cy="22" r="3.4" fill="#f5d742" stroke="#12202b" stroke-width="1.6"/>
+</svg>

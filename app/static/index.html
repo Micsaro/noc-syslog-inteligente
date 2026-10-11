@@ -1,203 +1,272 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="auto">
+<html lang="es" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NOC Syslog Inteligente</title>
+  <title>Bitácora · NOC Syslog Inteligente</title>
+  <link rel="icon" href="/static/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/app.js" defer></script>
   <script src="/static/console.js" defer></script>
 </head>
 <body>
-<header class="topbar">
-  <h1>NOC Syslog Inteligente <span class="badge">v0.2.0 · datos simulados</span></h1>
-  <div class="controls">
-    <label>Ventana
-      <select id="win">
-        <option value="6">6 h</option><option value="24" selected>24 h</option>
-        <option value="48">48 h</option><option value="72">72 h</option>
-      </select>
-    </label>
-    <label>Operador <input id="actor" maxlength="64" placeholder="tu nombre" autocomplete="off"></label>
-    <label>Notificar sev ≤
-      <select id="notify">
-        <option value="">Desactivado</option><option value="2">2 (críticos)</option>
-        <option value="3">3 (errores)</option><option value="4">4 (advertencias)</option>
-      </select>
-    </label>
-    <label class="inline"><input type="checkbox" id="auto" checked> Auto 15 s</label>
-    <button id="theme" type="button">Claro / Oscuro</button>
-    <small id="updated" class="muted"></small>
-  </div>
-</header>
+<a class="skip" href="#main">Saltar al contenido</a>
 
-<nav class="tabs">
-  <button type="button" data-tab="resumen" class="active">Resumen</button>
-  <button type="button" data-tab="eventos">Eventos</button>
-  <button type="button" data-tab="incidentes">Incidentes</button>
-  <button type="button" data-tab="consola">Consola</button>
-  <button type="button" data-tab="plantillas">Plantillas</button>
-</nav>
-
-<main>
-  <section id="tab-resumen" class="tab">
-    <div id="kpis" class="kpis"></div>
-    <div class="grid2">
-      <article class="card">
-        <h2>Estado de dispositivos</h2>
-        <div class="scroll">
-          <table>
-            <thead><tr><th>Equipo</th><th>Marca</th><th>IP</th><th>Inventario</th><th>Salud</th><th>Mensajes</th><th>Último evento</th></tr></thead>
-            <tbody id="dev-body"></tbody>
-          </table>
-        </div>
-      </article>
-      <article class="card"><h2>Mensajes por severidad</h2><div id="chart-sev"></div></article>
-      <article class="card">
-        <h2>Tendencia por hora</h2>
-        <div class="legend"><span class="sw sw-total"></span> Total <span class="sw sw-err"></span> Errores (sev 0-3)</div>
-        <div id="chart-trend"></div>
-      </article>
-      <article class="card"><h2>Últimos eventos graves (sev ≤ 3)</h2><ul id="recent" class="plain"></ul></article>
+<div class="shell">
+  <nav class="rail" aria-label="Secciones">
+    <a class="mark" href="/" title="Bitácora · NOC Syslog Inteligente">
+      <img src="/static/logo.svg" alt="Bitácora" width="44" height="44">
+    </a>
+    <div class="rail-nav">
+      <button type="button" data-tab="resumen" class="active" title="Panorama">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        <span>Panorama</span>
+      </button>
+      <button type="button" data-tab="eventos" title="Eventos">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        <span>Eventos</span>
+      </button>
+      <button type="button" data-tab="incidentes" title="Incidentes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h12l-2.5 4 2.5 4H5"/></svg>
+        <span>Incidentes</span>
+      </button>
+      <button type="button" data-tab="consola" title="Consola simulada">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l6 6-6 6M12 18h8"/></svg>
+        <span>Consola</span>
+      </button>
+      <button type="button" data-tab="plantillas" title="Plantillas de configuración">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6"/></svg>
+        <span>Plantillas</span>
+      </button>
     </div>
-    <article class="card">
-      <h2>Mapa de calor: volumen de mensajes por equipo y hora</h2>
-      <div id="heat" class="scroll"></div>
-    </article>
-  </section>
-
-  <section id="tab-eventos" class="tab" hidden>
-    <form id="filters" class="card filters" autocomplete="off">
-      <label>Desde <input type="date" id="f-from"></label>
-      <label>Hasta <input type="date" id="f-to"></label>
-      <label>Marca
-        <select id="f-vendor"><option value="">Todas</option><option>cisco</option><option>fortinet</option><option>huawei</option><option>other</option></select>
-      </label>
-      <label>Equipo <input id="f-device" list="dl-devices" placeholder="nombre del equipo"></label>
-      <label>Severidad
-        <select id="f-sev">
-          <option value="">Todas</option>
-          <option value="max:2">Críticos o peores (0-2)</option>
-          <option value="max:3">Errores o peores (0-3)</option>
-          <option value="max:4">Advertencias o peores (0-4)</option>
-          <option value="eq:0">0 Emergency</option><option value="eq:1">1 Alert</option><option value="eq:2">2 Critical</option>
-          <option value="eq:3">3 Error</option><option value="eq:4">4 Warning</option><option value="eq:5">5 Notice</option>
-          <option value="eq:6">6 Informational</option><option value="eq:7">7 Debug</option>
-        </select>
-      </label>
-      <label>Etiqueta <input id="f-tag" list="dl-tags" placeholder="ej. sospechoso"></label>
-      <label>Origen
-        <select id="f-sim"><option value="">Todos</option><option value="true">Simulados</option><option value="false">Reales</option></select>
-      </label>
-      <label>Texto <input id="f-q" maxlength="64" placeholder="buscar en el mensaje"></label>
-      <div class="filter-actions">
-        <button type="submit">Aplicar</button>
-        <button type="button" id="f-reset">Limpiar</button>
-      </div>
-    </form>
-    <article class="card">
-      <div class="scroll">
-        <table>
-          <thead><tr><th>Recibido</th><th>Severidad</th><th>Equipo</th><th>Marca</th><th>Facility</th><th>Mensaje</th><th>Etiquetas</th><th>Rep.</th><th></th></tr></thead>
-          <tbody id="ev-body"></tbody>
-        </table>
-      </div>
-      <div class="pager">
-        <button type="button" id="ev-prev">« Anterior</button>
-        <span id="ev-page" class="muted"></span>
-        <button type="button" id="ev-next">Siguiente »</button>
-      </div>
-    </article>
-  </section>
-
-  <section id="tab-incidentes" class="tab" hidden>
-    <div class="card toolbar">
-      <label>Estado
-        <select id="i-status">
-          <option value="active">Activos</option><option value="">Todos</option>
-          <option value="open">Abierto</option><option value="assigned">Asignado</option>
-          <option value="in_progress">En curso</option><option value="resolved">Resuelto</option>
-          <option value="closed">Cerrado</option>
-        </select>
-      </label>
-      <button type="button" id="i-new">+ Nuevo incidente</button>
+    <div class="rail-foot">
+      <button type="button" id="theme" title="Cambiar entre papel y plano nocturno">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path class="fill" d="M12 4a8 8 0 0 1 0 16z"/></svg>
+        <span>Tema</span>
+      </button>
     </div>
-    <article class="card">
-      <div class="scroll">
-        <table>
-          <thead><tr><th>#</th><th>Título</th><th>Severidad</th><th>Estado</th><th>Equipo</th><th>Asignado a</th><th>Eventos</th><th>Actualizado</th></tr></thead>
-          <tbody id="inc-body"></tbody>
-        </table>
+  </nav>
+
+  <div class="page">
+    <header class="bar">
+      <div class="brand">
+        <span class="wordmark">Bitácora</span>
+        <span class="byline">NOC Syslog Inteligente · <span id="today"></span></span>
       </div>
-    </article>
-  </section>
-    <section id="tab-consola" class="tab" hidden>
-    <div class="card toolbar">
-      <label>Equipo <select id="c-device"></select></label>
-      <label>Puerto serie <select id="c-port"><option value="">(se detecta al conectar)</option></select></label>
-      <div class="row">
-        <button type="button" id="c-detect" class="primary">Detectar puerto y conectar</button>
-        <button type="button" id="c-disconnect" disabled>Desconectar</button>
+      <div class="controls">
+        <span class="stamp" title="Todos los datos de este proyecto son simulados">datos simulados</span>
+        <label>Ventana
+          <select id="win">
+            <option value="6">6 h</option><option value="24" selected>24 h</option>
+            <option value="48">48 h</option><option value="72">72 h</option>
+          </select>
+        </label>
+        <label>Operador <input id="actor" maxlength="64" placeholder="tu nombre" autocomplete="off"></label>
+        <label>Avisar desde severidad
+          <select id="notify">
+            <option value="">Desactivado</option><option value="2">2 (críticos)</option>
+            <option value="3">3 (errores)</option><option value="4">4 (advertencias)</option>
+          </select>
+        </label>
+        <label class="inline"><input type="checkbox" id="auto" checked> Actualizar cada 15 s</label>
+        <small id="updated" class="muted"></small>
       </div>
-      <small id="c-status" class="muted">Sin conexión</small>
-    </div>
-    <div class="console-grid">
-      <article class="card term-card">
-        <div class="term-head">
-          <span class="pill st-in_progress">SESIÓN SIMULADA · SOLO LECTURA</span>
-          <small class="muted">Flechas ↑↓ para el historial · help · clear</small>
+    </header>
+
+    <main id="main">
+      <div class="head">
+        <h1 id="page-title">Panorama</h1>
+        <p id="page-deck" class="deck"></p>
+      </div>
+
+      <section id="tab-resumen" class="tab">
+        <div class="pan-top">
+          <section class="block">
+            <h2>Cifras de la guardia</h2>
+            <ul id="kpis" class="ledger"></ul>
+          </section>
+          <section class="block">
+            <h2>Mapa de fuentes <small>Cada nodo es un equipo que escribe en la bitácora; el grosor de la línea marca su volumen.</small></h2>
+            <div id="map"></div>
+          </section>
         </div>
-        <div id="term" class="term">
-          <pre id="term-out"></pre>
-          <div class="term-line"><span id="term-prompt">—</span><input id="term-in" autocomplete="off" spellcheck="false" maxlength="160" disabled></div>
+
+        <section class="block">
+          <h2>Cronología <small>Un punto por evento: el color indica la severidad y el tamaño, las repeticiones. Haz clic en un punto para abrirlo.</small></h2>
+          <div id="timeline" class="plot"></div>
+          <div id="tl-legend" class="legend"></div>
+          <p id="tl-note" class="note"></p>
+        </section>
+
+        <div class="pan-two wide-left">
+          <section class="block">
+            <h2>Equipos</h2>
+            <div class="scroll sheet">
+              <table>
+                <thead><tr><th>Equipo</th><th>Marca</th><th>IP</th><th>Inventario</th><th>Salud</th><th class="num">Mensajes</th><th>Último evento</th></tr></thead>
+                <tbody id="dev-body"></tbody>
+              </table>
+            </div>
+          </section>
+          <section class="block">
+            <h2>Últimos eventos graves <small>Severidad 0 a 3</small></h2>
+            <ul id="recent" class="plain notes"></ul>
+          </section>
         </div>
-      </article>
-      <aside class="side">
-        <article class="card"><h2>Verificación rápida</h2><div id="c-presets" class="btns"><span class="muted">Conéctate a un equipo.</span></div></article>
+
+        <div class="pan-two">
+          <section class="block">
+            <h2>Mensajes por severidad</h2>
+            <div id="chart-sev"></div>
+          </section>
+          <section class="block">
+            <h2>Mensajes por hora</h2>
+            <div class="legend"><span class="sw sw-total"></span> Total <span class="sw sw-err"></span> Errores (severidad 0 a 3)</div>
+            <div id="chart-trend"></div>
+          </section>
+        </div>
+
+        <section class="block">
+          <h2>Mapa de calor <small>Mensajes por equipo y hora; cuanto más oscura la celda, más volumen.</small></h2>
+          <div id="heat" class="scroll"></div>
+        </section>
+      </section>
+
+      <section id="tab-eventos" class="tab" hidden>
+        <form id="filters" class="card filters" autocomplete="off">
+          <label>Desde <input type="date" id="f-from"></label>
+          <label>Hasta <input type="date" id="f-to"></label>
+          <label>Marca
+            <select id="f-vendor"><option value="">Todas</option><option>cisco</option><option>fortinet</option><option>huawei</option><option>other</option></select>
+          </label>
+          <label>Equipo <input id="f-device" list="dl-devices" placeholder="nombre del equipo"></label>
+          <label>Severidad
+            <select id="f-sev">
+              <option value="">Todas</option>
+              <option value="max:2">Críticos o peores (0-2)</option>
+              <option value="max:3">Errores o peores (0-3)</option>
+              <option value="max:4">Advertencias o peores (0-4)</option>
+              <option value="eq:0">0 Emergency</option><option value="eq:1">1 Alert</option><option value="eq:2">2 Critical</option>
+              <option value="eq:3">3 Error</option><option value="eq:4">4 Warning</option><option value="eq:5">5 Notice</option>
+              <option value="eq:6">6 Informational</option><option value="eq:7">7 Debug</option>
+            </select>
+          </label>
+          <label>Etiqueta <input id="f-tag" list="dl-tags" placeholder="ej. sospechoso"></label>
+          <label>Origen
+            <select id="f-sim"><option value="">Todos</option><option value="true">Simulados</option><option value="false">Reales</option></select>
+          </label>
+          <label>Texto <input id="f-q" maxlength="64" placeholder="buscar en el mensaje"></label>
+          <div class="filter-actions">
+            <button type="submit" class="primary">Aplicar</button>
+            <button type="button" id="f-reset">Limpiar</button>
+          </div>
+        </form>
         <article class="card">
-          <h2>Macros</h2>
-          <ul id="c-macros" class="plain"></ul>
-          <form id="c-macro-form">
-            <label>Nombre <input id="c-macro-name" maxlength="40" placeholder="Revisión rápida" required></label>
-            <label>Comandos (uno por línea, máx. 10)<textarea id="c-macro-cmds" rows="4" placeholder="show version&#10;show ip interface brief"></textarea></label>
-            <button type="submit">Guardar macro</button>
-          </form>
+          <div class="scroll">
+            <table>
+              <thead><tr><th>Recibido</th><th>Severidad</th><th>Equipo</th><th>Marca</th><th>Facility</th><th>Mensaje</th><th>Etiquetas</th><th class="num">Rep.</th><th></th></tr></thead>
+              <tbody id="ev-body"></tbody>
+            </table>
+          </div>
+          <div class="pager">
+            <button type="button" id="ev-prev">« Anterior</button>
+            <span id="ev-page" class="muted"></span>
+            <button type="button" id="ev-next">Siguiente »</button>
+          </div>
         </article>
-        <article class="card"><h2>Política de comandos</h2><div id="c-policy"><span class="muted">Conéctate a un equipo.</span></div></article>
-      </aside>
-    </div>
-  </section>
+      </section>
 
-  <section id="tab-plantillas" class="tab" hidden>
-    <form id="g-form" class="card filters" autocomplete="off">
-      <label>Equipo (opcional) <select id="g-device"></select></label>
-      <label>Fabricante
-        <select id="g-vendor">
-          <option value="cisco">Cisco IOS / IOS XE</option><option value="fortinet">Fortinet FortiOS</option><option value="huawei">Huawei VRP</option>
-        </select>
-      </label>
-      <label>Plantilla
-        <select id="g-template">
-          <option value="syslog">Envío de Syslog al NOC</option><option value="hardening">Endurecimiento base</option>
-        </select>
-      </label>
-      <label>Servidor Syslog <input id="g-host" value="192.0.2.50" maxlength="45"></label>
-      <label>Puerto <input id="g-port" type="number" min="1" max="65535" value="514"></label>
-      <label>Severidad máxima <select id="g-sev"></select></label>
-      <label>Servidor NTP <input id="g-ntp" value="192.0.2.123" maxlength="45"></label>
-      <div class="filter-actions">
-        <button type="submit" class="primary">Generar</button>
-        <button type="button" id="g-copy">Copiar</button>
-      </div>
-    </form>
-    <article class="card"><pre id="g-out" class="config">Genera una plantilla para verla aquí.</pre></article>
-  </section>
-</main>
+      <section id="tab-incidentes" class="tab" hidden>
+        <div class="card toolbar">
+          <label>Estado
+            <select id="i-status">
+              <option value="active">Activos</option><option value="">Todos</option>
+              <option value="open">Abierto</option><option value="assigned">Asignado</option>
+              <option value="in_progress">En curso</option><option value="resolved">Resuelto</option>
+              <option value="closed">Cerrado</option>
+            </select>
+          </label>
+          <button type="button" id="i-new" class="primary">Nuevo incidente</button>
+        </div>
+        <article class="card">
+          <div class="scroll">
+            <table>
+              <thead><tr><th>#</th><th>Título</th><th>Severidad</th><th>Estado</th><th>Equipo</th><th>Asignado a</th><th class="num">Eventos</th><th>Actualizado</th></tr></thead>
+              <tbody id="inc-body"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section id="tab-consola" class="tab" hidden>
+        <div class="card toolbar">
+          <label>Equipo <select id="c-device"></select></label>
+          <label>Puerto serie <select id="c-port"><option value="">(se detecta al conectar)</option></select></label>
+          <div class="row">
+            <button type="button" id="c-detect" class="primary">Detectar puerto y conectar</button>
+            <button type="button" id="c-disconnect" disabled>Desconectar</button>
+          </div>
+          <small id="c-status" class="muted">Sin conexión</small>
+        </div>
+        <div class="console-grid">
+          <article class="card term-card">
+            <div class="term-head">
+              <span class="pill st-in_progress">sesión simulada · solo lectura</span>
+              <small class="muted">Flechas ↑↓ para el historial. Comandos locales: help y clear.</small>
+            </div>
+            <div id="term" class="term">
+              <pre id="term-out"></pre>
+              <div class="term-line"><span id="term-prompt">—</span><input id="term-in" autocomplete="off" spellcheck="false" maxlength="160" disabled></div>
+            </div>
+          </article>
+          <aside class="side">
+            <article class="card"><h2>Verificación rápida</h2><div id="c-presets" class="btns"><span class="muted">Conéctate a un equipo.</span></div></article>
+            <article class="card">
+              <h2>Macros</h2>
+              <ul id="c-macros" class="plain"></ul>
+              <form id="c-macro-form">
+                <label>Nombre <input id="c-macro-name" maxlength="40" placeholder="Revisión rápida" required></label>
+                <label>Comandos (uno por línea, máx. 10)<textarea id="c-macro-cmds" rows="4" placeholder="show version&#10;show ip interface brief"></textarea></label>
+                <button type="submit">Guardar macro</button>
+              </form>
+            </article>
+            <article class="card"><h2>Política de comandos</h2><div id="c-policy"><span class="muted">Conéctate a un equipo.</span></div></article>
+          </aside>
+        </div>
+      </section>
+
+      <section id="tab-plantillas" class="tab" hidden>
+        <form id="g-form" class="card filters" autocomplete="off">
+          <label>Equipo (opcional) <select id="g-device"></select></label>
+          <label>Fabricante
+            <select id="g-vendor">
+              <option value="cisco">Cisco IOS / IOS XE</option><option value="fortinet">Fortinet FortiOS</option><option value="huawei">Huawei VRP</option>
+            </select>
+          </label>
+          <label>Plantilla
+            <select id="g-template">
+              <option value="syslog">Envío de Syslog al NOC</option><option value="hardening">Endurecimiento base</option>
+            </select>
+          </label>
+          <label>Servidor Syslog <input id="g-host" value="192.0.2.50" maxlength="45"></label>
+          <label>Puerto <input id="g-port" type="number" min="1" max="65535" value="514"></label>
+          <label>Severidad máxima <select id="g-sev"></select></label>
+          <label>Servidor NTP <input id="g-ntp" value="192.0.2.123" maxlength="45"></label>
+          <div class="filter-actions">
+            <button type="submit" class="primary">Generar</button>
+            <button type="button" id="g-copy">Copiar</button>
+          </div>
+        </form>
+        <article class="card"><pre id="g-out" class="config">Genera una plantilla para verla aquí.</pre></article>
+      </section>
+    </main>
+  </div>
+</div>
 
 <dialog id="dlg-event"></dialog>
 <dialog id="dlg-inc-new"></dialog>
 <dialog id="dlg-inc"></dialog>
-<div id="toast" class="toast" aria-live="polite"></div>
+<div id="toast" class="toast" popover="manual" aria-live="polite"></div>
 <datalist id="dl-devices"></datalist>
 <datalist id="dl-tags"></datalist>
 </body>
